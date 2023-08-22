@@ -1,6 +1,9 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+//builder.Services.AddDbContext<CinemaDbContext>(opt => opt.UseLazyLoadingProxies()
+//    .UseNpgsql(builder.Configuration.GetConnectionString("Multitag"),
+//    o => o.MigrationsAssembly("Multitag.Cinema.Api")));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
