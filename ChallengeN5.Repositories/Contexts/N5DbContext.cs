@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using ChallengeN5.Repositories.Models;
+﻿using ChallengeN5.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChallengeN5.Repositories.Contexts;

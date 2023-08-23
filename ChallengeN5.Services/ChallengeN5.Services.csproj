@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ChallengeN5.Repositories\ChallengeN5.Repositories.csproj" />
+  </ItemGroup>
+
 </Project>
