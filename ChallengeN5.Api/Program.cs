@@ -1,7 +1,5 @@
-using ChallengeN5.Repositories;
 using ChallengeN5.Repositories.Contexts;
 using ChallengeN5.Repositories.Mapping;
-using ChallengeN5.Repositories.Repositories.Impl;
 using ChallengeN5.Repositories.UnitOfWork;
 using ChallengeN5.Services.Services;
 using ChallengeN5.Services.Services.Impl;

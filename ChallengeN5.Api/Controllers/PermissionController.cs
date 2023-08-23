@@ -1,5 +1,4 @@
 ﻿using ChallengeN5.Repositories.Dto;
-using ChallengeN5.Repositories.Models;
 using ChallengeN5.Services.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,21 +17,21 @@ namespace ChallengeN5.Api.Controllers
             _permissionService = permissionService;
         }
 
-        [HttpGet("Get")]
+        [HttpGet("GetPermissions")]
         public async Task<IActionResult> Get()
         {
             return Ok(await _permissionService.GetAll());
         }
 
-        [HttpPost("Request")]
-        public async Task<IActionResult> Request([FromBody] PermissionDto permissionDto)
+        [HttpPost("RequestPermission")]
+        public async Task<IActionResult> RequestPermission([FromBody] PermissionDto permissionDto)
         {
             await _permissionService.Request(permissionDto);
             return Created("", permissionDto);
         }
 
-        [HttpPut("Modify")]
-        public async Task<IActionResult> Modify([FromBody] PermissionDto permissionDto)
+        [HttpPut("ModifyPermission")]
+        public async Task<IActionResult> ModifyPermission([FromBody] PermissionDto permissionDto)
         {            
             await _permissionService.Modify(permissionDto);
             return Ok();

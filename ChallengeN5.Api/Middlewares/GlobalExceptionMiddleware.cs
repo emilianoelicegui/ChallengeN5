@@ -1,5 +1,4 @@
-﻿using ChallengeN5.Api.Controllers;
-using ChallengeN5.Repositories.Dto;
+﻿using ChallengeN5.Repositories.Dto;
 using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
