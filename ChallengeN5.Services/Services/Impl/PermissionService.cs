@@ -3,6 +3,7 @@ using ChallengeN5.Repositories.Dto;
 using ChallengeN5.Repositories.Models;
 using ChallengeN5.Repositories.UnitOfWork;
 using Microsoft.Extensions.Logging;
+using Nest;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 
@@ -13,58 +14,126 @@ namespace ChallengeN5.Services.Services.Impl
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<PermissionService> _logger;
+        private readonly IElasticClient _elasticClient;
+        private readonly IKafkaService _kafkaService;
+
+        private string _elasticIndex = "permissions";
 
         public PermissionService(IUnitOfWork unitOfWork,
                 IMapper mapper,
-                ILogger<PermissionService> logger
+                ILogger<PermissionService> logger,
+                IElasticClient elasticClient,
+                IKafkaService kafkaService
             )
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _elasticClient = elasticClient;
+            _kafkaService = kafkaService;
         }
 
         public async Task<IEnumerable<PermissionDto>> GetAll()
         {
             _logger.LogInformation("GetAll service ..");
 
+            var permissionsElastic = _elasticClient.Search<Permission>(s => s
+                .MatchAll()
+            );
+
+            //message in kafka
+            _kafkaService.ProduceOperationMessage(new KafkaMessageDto
+            {
+                Id = Guid.NewGuid(),
+                OperationName = "get"
+            });
+
+            if (!permissionsElastic.Documents.Any())
+                return _mapper.Map<IEnumerable<PermissionDto>>
+                    (await _unitOfWork.PermissionRepository.GetAllIncludeAsync());
+
             return _mapper.Map<IEnumerable<PermissionDto>>
-                (await _unitOfWork.PermissionRepository.GetAllAsync());
+                    (permissionsElastic.Documents);
         }
 
-        public async Task Modify(PermissionDto permissionDto)
+        public async Task Modify(UpsertPermissionDto permissionDto, int idPermission)
         {
-            _logger.LogInformation("Modify service ..");
+            try
+            {
+                _logger.LogInformation("Modify service ..");
 
-            Expression<Func<Permission, bool>> f = c => true;
-            var permission = await _unitOfWork.PermissionRepository
-                .GetAsync(expression: f = f.And(x => x.Id == permissionDto.Id));
+                //message in kafka
+                _kafkaService.ProduceOperationMessage(new KafkaMessageDto
+                {
+                    Id = Guid.NewGuid(),
+                    OperationName = "modify"
+                });
 
-            if (permission == null)
-                throw new ValidationException("El permiso no existe");
+                Expression<Func<Permission, bool>> f = c => true;
+                var permission = await _unitOfWork.PermissionRepository
+                    .GetAsync(expression: f = f.And(x => x.Id == idPermission));
 
-            _mapper.Map(permissionDto, permission);
+                if (permission == null)
+                    throw new ValidationException("El permiso no existe");
 
-            await _unitOfWork.CommitAsync();
+                //sql
+                _mapper.Map(permissionDto, permission);
+
+                //elastic 
+                var updateResponse = _elasticClient.Update<Permission, object>(idPermission, u => u
+                    .Doc(permission)
+                    .DocAsUpsert()
+                );
+
+                await _unitOfWork.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }           
         }
 
-        public async Task Request(PermissionDto permissionDto)
+        public async Task Request(UpsertPermissionDto permissionDto)
         {
-            _logger.LogInformation("Request service ..");
+            try
+            {
+                _logger.LogInformation("Request service ..");
 
-            Expression<Func<Permission, bool>> f = c => true;
+                //message in kafka
+                _kafkaService.ProduceOperationMessage(new KafkaMessageDto
+                {
+                    Id = Guid.NewGuid(),
+                    OperationName = "request"
+                });
 
-            var permission = _unitOfWork.PermissionRepository
-                .Get(expression: f = f.And(x => x.NombreEmpleado.ToLower() == permissionDto.NombreEmpleado.ToLower()
-                    && x.ApellidoEmpleado.ToLower() == permissionDto.ApellidoEmpleado.ToLower()
-                    && x.TipoPermiso == permissionDto.TipoPermiso));
+                Expression<Func<Permission, bool>> f = c => true;
 
-            if (permission != null)
-                throw new ValidationException("Permiso ya existente");
+                var permission = _unitOfWork.PermissionRepository
+                    .Get(expression: f = f.And(x => x.NombreEmpleado.ToLower() == permissionDto.NombreEmpleado.ToLower()
+                        && x.ApellidoEmpleado.ToLower() == permissionDto.ApellidoEmpleado.ToLower()
+                        && x.TipoPermiso == permissionDto.TipoPermiso));
 
-            _unitOfWork.PermissionRepository.Add(_mapper.Map<Permission>(permissionDto));
+                if (permission != null)
+                    throw new ValidationException("Permiso ya existente");
 
-            await _unitOfWork.CommitAsync();
+                permission = _mapper.Map<Permission>(permissionDto);
+                
+                //sql
+                _unitOfWork.PermissionRepository.Add(permission);
+
+                //elastic
+                var indexRequest = new IndexRequest<Permission>
+                    (permission, _elasticIndex, Guid.NewGuid().ToString());
+                var indexResponse = await _elasticClient.IndexAsync(indexRequest);
+
+                await _unitOfWork.CommitAsync();
+            }
+            catch 
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
     }
 }

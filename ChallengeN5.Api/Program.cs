@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using ChallengeN5.Api.Middlewares;
+using Nest;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,9 +22,13 @@ builder.Services.AddControllers()
             o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
 
-builder.Services.AddTransient<IPermissionService, PermissionService>();
+var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
+        .DefaultIndex("permissions");
 
+builder.Services.AddTransient<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddSingleton<IElasticClient>(new ElasticClient(settings));
+builder.Services.AddSingleton<IKafkaService, KafkaService>();
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfiles));

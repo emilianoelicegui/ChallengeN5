@@ -8,8 +8,13 @@ namespace ChallengeN5.Repositories.Mapping
     {
         public MappingProfiles()
         {
+            CreateMap<UpsertPermissionDto, Permission>();
+
             CreateMap<Permission, PermissionDto>();
             CreateMap<PermissionDto, Permission>();
+
+            CreateMap<PermissionType, PermissionTypeDto>();
+            CreateMap<PermissionTypeDto, PermissionType>();
         }
     }
 }

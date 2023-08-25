@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" Version="2.2.0" />
+    <PackageReference Include="NEST" Version="7.17.5" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ChallengeN5.Repositories\ChallengeN5.Repositories.csproj" />
   </ItemGroup>
 

@@ -24,16 +24,16 @@ namespace ChallengeN5.Api.Controllers
         }
 
         [HttpPost("RequestPermission")]
-        public async Task<IActionResult> RequestPermission([FromBody] PermissionDto permissionDto)
+        public async Task<IActionResult> RequestPermission([FromBody] UpsertPermissionDto permissionDto)
         {
             await _permissionService.Request(permissionDto);
             return Created("", permissionDto);
         }
 
-        [HttpPut("ModifyPermission")]
-        public async Task<IActionResult> ModifyPermission([FromBody] PermissionDto permissionDto)
+        [HttpPut("ModifyPermission/{idPermission}")]
+        public async Task<IActionResult> ModifyPermission([FromBody] UpsertPermissionDto permissionDto, int idPermission)
         {            
-            await _permissionService.Modify(permissionDto);
+            await _permissionService.Modify(permissionDto, idPermission);
             return Ok();
         }
     }

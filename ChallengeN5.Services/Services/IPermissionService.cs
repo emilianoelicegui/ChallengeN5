@@ -6,7 +6,7 @@ namespace ChallengeN5.Services.Services
     public interface IPermissionService
     {
         Task<IEnumerable<PermissionDto>> GetAll();
-        Task Modify(PermissionDto permissionDto);
-        Task Request(PermissionDto permissionDto);   
+        Task Modify(UpsertPermissionDto permissionDto, int idPermission);
+        Task Request(UpsertPermissionDto permissionDto);   
     }
 }
