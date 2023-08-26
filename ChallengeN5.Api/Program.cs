@@ -31,7 +31,7 @@ builder.Services.AddSingleton<IElasticClient>(new ElasticClient(settings));
 builder.Services.AddSingleton<IKafkaService, KafkaService>();
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingProfiles));
+builder.Services.AddAutoMapper(typeof(MappingProfiles));    
 
 // Add services to the container.
 builder.Services.AddDbContext<N5DbContext>(opt => opt

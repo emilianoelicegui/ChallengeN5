@@ -48,7 +48,7 @@ namespace ChallengeN5.Services.Services.Impl
                 OperationName = "get"
             });
 
-            if (!permissionsElastic.Documents.Any())
+            if (permissionsElastic == null || !permissionsElastic.Documents.Any())
                 return _mapper.Map<IEnumerable<PermissionDto>>
                     (await _unitOfWork.PermissionRepository.GetAllIncludeAsync());
 
@@ -70,8 +70,8 @@ namespace ChallengeN5.Services.Services.Impl
                 });
 
                 Expression<Func<Permission, bool>> f = c => true;
-                var permission = await _unitOfWork.PermissionRepository
-                    .GetAsync(expression: f = f.And(x => x.Id == idPermission));
+                var permission = _unitOfWork.PermissionRepository
+                    .Get(expression: f = f.And(x => x.Id == idPermission));
 
                 if (permission == null)
                     throw new ValidationException("El permiso no existe");
