@@ -7,6 +7,7 @@ namespace ChallengeN5.Repositories.Dto
         public int Id { get; set; }
         public string NombreEmpleado { get; set; } = null!;
         public string ApellidoEmpleado { get; set; } = null!;
+        public int TipoPermiso { get; set; }
         public DateTime FechaPermiso { get; set; }
         public virtual PermissionTypeDto TipoPermisoNavigation { get; set; } = null!;
     }

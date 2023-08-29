@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace ChallengeN5.Repositories.Dto
 {
-    public class UpsertPermissionDto
+    public class ModifyPermissionDto
     {
+        public int? Id { get; set; }
         public string NombreEmpleado { get; set; } = null!;
         public string ApellidoEmpleado { get; set; } = null!;
         public int TipoPermiso { get; set; }

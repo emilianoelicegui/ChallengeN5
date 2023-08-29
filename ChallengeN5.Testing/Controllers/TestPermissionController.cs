@@ -5,6 +5,7 @@ using ChallengeN5.Testing.Mocks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NSubstitute;
 
 namespace ChallengeN5.Testing.Controllers
 {
@@ -34,12 +35,12 @@ namespace ChallengeN5.Testing.Controllers
             // Arrange
             var mockPermissionService = new Mock<IPermissionService>();
             var loggerPermissionService = new Mock<ILogger<PermissionController>>();
-            mockPermissionService.Setup(service => service.Request(It.IsAny<UpsertPermissionDto>()))
-                                 .Returns(Task.CompletedTask);
+            mockPermissionService.Setup(service => service.Request(It.IsAny<int>()))
+                                 .ReturnsAsync(PermissionMockData.GetAllDtoAsync().Result.First());
             var permissionController = new PermissionController(loggerPermissionService.Object, mockPermissionService.Object);
 
             // Act
-            var result = await permissionController.RequestPermission(PermissionMockData.NewRequest());
+            var result = await permissionController.Request(1);
 
             // Assert
             Assert.IsType<CreatedResult>(result);
@@ -51,13 +52,13 @@ namespace ChallengeN5.Testing.Controllers
             // Arrange
             var mockPermissionService = new Mock<IPermissionService>();
             var loggerPermissionService = new Mock<ILogger<PermissionController>>();
-            mockPermissionService.Setup(service => service.Modify(It.IsAny<UpsertPermissionDto>(), 1))
+            mockPermissionService.Setup(service => service.Modify(It.IsAny<ModifyPermissionDto>()))
                                  .Returns(Task.CompletedTask);
 
             var permissionController = new PermissionController(loggerPermissionService.Object, mockPermissionService.Object);
 
             // Act
-            var result = await permissionController.ModifyPermission(PermissionMockData.NewRequest(), 1);
+            var result = await permissionController.Modify(PermissionMockData.NewRequest());
 
             // Assert
             Assert.IsType<OkResult>(result);

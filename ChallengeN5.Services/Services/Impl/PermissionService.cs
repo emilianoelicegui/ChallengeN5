@@ -33,6 +33,44 @@ namespace ChallengeN5.Services.Services.Impl
             _kafkaService = kafkaService;
         }
 
+        public async Task<PermissionDto> Request(int? id)
+        {
+            _logger.LogInformation("Request service ..");
+
+            //message in kafka
+            _kafkaService.ProduceOperationMessage(new KafkaMessageDto
+            {
+                Id = Guid.NewGuid(),
+                OperationName = "request"
+            });
+
+            var permissionElastic = _elasticClient.Search<Permission>(s => s
+                .Query(q => q
+                    .Term(t => t
+                    .Field(f => f.Id)
+                    .Value(id)
+                    )
+                )
+            ).Documents.FirstOrDefault();
+
+            if (permissionElastic == null)
+            {
+                Expression<Func<Permission, bool>> f = c => true;
+
+                var permission = _mapper.Map<PermissionDto>
+                    (await _unitOfWork.PermissionRepository
+                    .GetAsync(expression: f = f.And(x => x.Id == id)));
+
+                if (permission == null)
+                    throw new ValidationException("El permiso no existe");
+
+                return permission;
+            }
+
+            return _mapper.Map<PermissionDto>
+                (permissionElastic);
+        }
+
         public async Task<IEnumerable<PermissionDto>> GetAll()
         {
             _logger.LogInformation("GetAll service ..");
@@ -56,7 +94,7 @@ namespace ChallengeN5.Services.Services.Impl
                     (permissionsElastic.Documents);
         }
 
-        public async Task Modify(UpsertPermissionDto permissionDto, int idPermission)
+        public async Task Modify(ModifyPermissionDto permissionDto)
         {
             try
             {
@@ -71,19 +109,33 @@ namespace ChallengeN5.Services.Services.Impl
 
                 Expression<Func<Permission, bool>> f = c => true;
                 var permission = _unitOfWork.PermissionRepository
-                    .Get(expression: f = f.And(x => x.Id == idPermission));
+                    .Get(expression: f = f.And(x => x.Id == permissionDto.Id));
 
                 if (permission == null)
-                    throw new ValidationException("El permiso no existe");
+                {
+                    //insert
+                    permission = _mapper.Map<Permission>(permissionDto);
 
-                //sql
-                _mapper.Map(permissionDto, permission);
+                    //sql
+                    _unitOfWork.PermissionRepository.Add(permission);
 
-                //elastic 
-                var updateResponse = _elasticClient.Update<Permission, object>(idPermission, u => u
-                    .Doc(permission)
-                    .DocAsUpsert()
-                );
+                    //elastic
+                    var indexRequest = new IndexRequest<Permission>
+                        (permission, _elasticIndex, Guid.NewGuid().ToString());
+                    var indexResponse = await _elasticClient.IndexAsync(indexRequest);
+                }
+                else
+                {
+                    //update
+                    //sql
+                    _mapper.Map(permissionDto, permission);
+
+                    //elastic 
+                    var updateResponse = _elasticClient.Update<Permission, object>(permission.Id, u => u
+                        .Doc(permission)
+                        .DocAsUpsert()
+                        );
+                }
 
                 await _unitOfWork.CommitAsync();
             }
@@ -92,48 +144,6 @@ namespace ChallengeN5.Services.Services.Impl
                 await _unitOfWork.RollbackAsync();
                 throw;
             }           
-        }
-
-        public async Task Request(UpsertPermissionDto permissionDto)
-        {
-            try
-            {
-                _logger.LogInformation("Request service ..");
-
-                //message in kafka
-                _kafkaService.ProduceOperationMessage(new KafkaMessageDto
-                {
-                    Id = Guid.NewGuid(),
-                    OperationName = "request"
-                });
-
-                Expression<Func<Permission, bool>> f = c => true;
-
-                var permission = _unitOfWork.PermissionRepository
-                    .Get(expression: f = f.And(x => x.NombreEmpleado.ToLower() == permissionDto.NombreEmpleado.ToLower()
-                        && x.ApellidoEmpleado.ToLower() == permissionDto.ApellidoEmpleado.ToLower()
-                        && x.TipoPermiso == permissionDto.TipoPermiso));
-
-                if (permission != null)
-                    throw new ValidationException("Permiso ya existente");
-
-                permission = _mapper.Map<Permission>(permissionDto);
-                
-                //sql
-                _unitOfWork.PermissionRepository.Add(permission);
-
-                //elastic
-                var indexRequest = new IndexRequest<Permission>
-                    (permission, _elasticIndex, Guid.NewGuid().ToString());
-                var indexResponse = await _elasticClient.IndexAsync(indexRequest);
-
-                await _unitOfWork.CommitAsync();
-            }
-            catch 
-            {
-                await _unitOfWork.RollbackAsync();
-                throw;
-            }
         }
     }
 }

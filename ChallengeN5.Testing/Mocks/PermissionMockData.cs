@@ -5,9 +5,9 @@ namespace ChallengeN5.Testing.Mocks
 {
     public class PermissionMockData
     {
-        public static UpsertPermissionDto NewRequest()
+        public static ModifyPermissionDto NewRequest()
         {
-            return new UpsertPermissionDto
+            return new ModifyPermissionDto
             {
                 NombreEmpleado = "Emiliano",
                 ApellidoEmpleado = "Elicegui",

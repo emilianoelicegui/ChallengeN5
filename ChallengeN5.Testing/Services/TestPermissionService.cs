@@ -199,7 +199,7 @@ namespace ChallengeN5.Testing.Services
             );
 
             // Act
-            await service.Request(PermissionMockData.NewRequest());
+            await service.Request(1);
 
             // Assert
             // Verifica que el método ProduceOperationMessage del mock de KafkaService haya sido llamado
@@ -239,7 +239,7 @@ namespace ChallengeN5.Testing.Services
             );
 
             // Act y Assert
-            await Assert.ThrowsAsync<ValidationException>(() => service.Request(PermissionMockData.NewRequest()));
+            await Assert.ThrowsAsync<ValidationException>(() => service.Request(1));
         }
 
         #endregion Request
@@ -273,7 +273,7 @@ namespace ChallengeN5.Testing.Services
             );
 
             // Act
-            await service.Modify(PermissionMockData.NewRequest(), 1);
+            await service.Modify(PermissionMockData.NewRequest());
 
             // Assert
             // Verifica que el método ProduceOperationMessage del mock de KafkaService haya sido llamado
@@ -315,7 +315,7 @@ namespace ChallengeN5.Testing.Services
             );
 
             // Act y Assert
-            await Assert.ThrowsAsync<ValidationException>(() => service.Modify(PermissionMockData.NewRequest(), 1));
+            await Assert.ThrowsAsync<ValidationException>(() => service.Modify(PermissionMockData.NewRequest()));
         }
     }
 
