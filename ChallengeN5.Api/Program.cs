@@ -18,7 +18,6 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 }));
 
 builder.Services.AddControllers()
-        //data annotations validation disabled
         .ConfigureApiBehaviorOptions(o =>
             o.SuppressModelStateInvalidFilter = true)
         .AddJsonOptions(o =>

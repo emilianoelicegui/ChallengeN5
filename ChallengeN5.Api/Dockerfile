@@ -11,6 +11,8 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["ChallengeN5.Api/ChallengeN5.Api.csproj", "ChallengeN5.Api/"]
+COPY ["ChallengeN5.Repositories/ChallengeN5.Repositories.csproj", "../ChallengeN5.Repositories/"]
+COPY ["ChallengeN5.Services/ChallengeN5.Services.csproj", "ChallengeN5.Services/"]
 RUN dotnet restore "ChallengeN5.Api/ChallengeN5.Api.csproj"
 COPY . .
 WORKDIR "/src/ChallengeN5.Api"

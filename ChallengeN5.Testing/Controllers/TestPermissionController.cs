@@ -43,7 +43,7 @@ namespace ChallengeN5.Testing.Controllers
             var result = await permissionController.Request(1);
 
             // Assert
-            Assert.IsType<CreatedResult>(result);
+            Assert.IsType<OkObjectResult>(result);
         }
 
         [Fact]
